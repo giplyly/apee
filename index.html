@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>GIP STORE | NextGen Digital Hub</title>
+  <!-- Font Awesome 6 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700;14..32,800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- JSZip untuk buat file ZIP -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: radial-gradient(circle at 10% 20%, #0a0f1e, #03060e);
+      font-family: 'Inter', sans-serif;
+      color: #f0f3fa;
+      padding: 1.5rem;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    /* header */
+    .header-flex {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 2rem;
+      gap: 1rem;
+    }
+    .logo h1 {
+      font-family: 'Space Grotesk', monospace;
+      font-weight: 700;
+      font-size: 2.3rem;
+      background: linear-gradient(135deg, #ffffff, #4facfe, #00f2fe);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      letter-spacing: -1px;
+    }
+    .badge {
+      background: #0f212eaa;
+      padding: 0.3rem 1rem;
+      border-radius: 40px;
+      font-size: 0.75rem;
+      backdrop-filter: blur(4px);
+      border-left: 2px solid cyan;
+    }
+    .dev-note {
+      background: #075e54aa;
+      border-radius: 30px;
+      padding: 0.3rem 1rem;
+      font-size: 0.75rem;
+    }
+
+    /* menu grid - bisa diklik */
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1.4rem;
+      margin: 2rem 0 2rem 0;
+    }
+    .menu-card {
+      background: rgba(12, 22, 40, 0.7);
+      backdrop-filter: blur(5px);
+      border-radius: 1.5rem;
+      padding: 1.3rem 1rem;
+      transition: all 0.2s ease;
+      border: 1px solid rgba(72, 187, 255, 0.3);
+      cursor: pointer;
+      text-align: center;
+    }
+    .menu-card:hover {
+      transform: translateY(-6px);
+      background: #0f2a44cc;
+      border-color: #3b82f6;
+      box-shadow: 0 15px 25px -10px #00a6ff30;
+    }
+    .menu-icon {
+      font-size: 2.2rem;
+      color: #38bdf8;
+      margin-bottom: 0.7rem;
+    }
+    .menu-card h3 {
+      font-weight: 700;
+      font-size: 1.2rem;
+      margin-bottom: 0.3rem;
+    }
+    .menu-desc {
+      font-size: 0.7rem;
+      opacity: 0.75;
+    }
+
+    /* AI chatbot (hanya tanya jawab) */
+    .ai-chatbot {
+      background: linear-gradient(115deg, #071126cc, #0a1430cc);
+      border-radius: 1.8rem;
+      padding: 1.5rem;
+      margin: 1rem 0 1.5rem 0;
+      border: 1px solid #2c5282;
+    }
+    .ai-header {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    .ai-header i {
+      font-size: 2rem;
+      color: #2dd4bf;
+    }
+    .chat-display {
+      background: #030712aa;
+      border-radius: 1.2rem;
+      padding: 1rem;
+      min-height: 95px;
+      font-size: 0.9rem;
+      margin-bottom: 1rem;
+      border-left: 4px solid #2dd4bf;
+    }
+    .ai-ask-group {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .ai-ask-group input {
+      flex: 3;
+      background: #0f172f;
+      border: 1px solid #2d3e6e;
+      border-radius: 2rem;
+      padding: 0.8rem 1.2rem;
+      color: white;
+      font-family: 'Inter', monospace;
+      outline: none;
+    }
+    .ai-ask-group input:focus {
+      border-color: #2dd4bf;
+    }
+    button {
+      background: linear-gradient(95deg, #2563eb, #1e3a8a);
+      border: none;
+      border-radius: 2rem;
+      padding: 0 1.5rem;
+      font-weight: 600;
+      color: white;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    button:hover {
+      transform: scale(0.97);
+    }
+
+    /* Output panel + ZIP */
+    .output-panel {
+      background: #030b1ae6;
+      border-radius: 1.5rem;
+      margin-top: 1.2rem;
+      border: 1px solid #1e2f4b;
+    }
+    .output-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.9rem 1.2rem;
+      border-bottom: 1px solid #1f3a5f;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .code-area {
+      background: #01050f;
+      padding: 1rem;
+      font-family: 'Fira Code', 'Courier New', monospace;
+      font-size: 0.8rem;
+      white-space: pre-wrap;
+      word-break: break-word;
+      max-height: 280px;
+      overflow: auto;
+      border-radius: 1rem;
+      margin: 1rem;
+      color: #bbf0ff;
+    }
+    .send-wa-box {
+      background: #071832cc;
+      border-radius: 1.2rem;
+      padding: 1rem;
+      margin: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    textarea {
+      background: #0a1122;
+      border: 1px solid #2d4875;
+      border-radius: 1.2rem;
+      padding: 0.8rem;
+      color: white;
+      font-family: monospace;
+      resize: vertical;
+      width: 100%;
+    }
+    .btn-group {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .btn-wa {
+      background: #25D366;
+      background: linear-gradient(95deg, #25D366, #128C7E);
+      padding: 0.7rem 1.5rem;
+      font-weight: bold;
+    }
+    .btn-zip {
+      background: linear-gradient(95deg, #f97316, #ea580c);
+      padding: 0.7rem 1.5rem;
+      font-weight: bold;
+    }
+    .note {
+      font-size: 0.7rem;
+      opacity: 0.7;
+    }
+    footer {
+      text-align: center;
+      margin-top: 2rem;
+      font-size: 0.7rem;
+      opacity: 0.6;
+    }
+    hr {
+      border-color: #1f4970;
+      margin: 1rem 0;
+    }
+    @media (max-width: 680px) {
+      body { padding: 1rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="header-flex">
+    <div class="logo">
+      <h1><i class="fas fa-crown" style="color:#fbbf24; font-size: 2rem;"></i> GIP STORE</h1>
+      <div class="badge"><i class="fas fa-bolt"></i> NEXT GEN DIGITAL HUB | FILE BUILDER + ZIP</div>
+    </div>
+    <div class="dev-note"><i class="fab fa-whatsapp"></i> Developer: 62895326378456</div>
+  </div>
+
+  <!-- MENU GRID (Ilegal → Tidak Ilegal + SV Methods) -->
+  <div class="menu-grid" id="menuGrid">
+    <div class="menu-card" data-type="exploit">
+      <div class="menu-icon"><i class="fas fa-skull"></i></div>
+      <h3>Exploit Payload</h3>
+      <div class="menu-desc">POC ethical research / reverse shell pattern</div>
+    </div>
+    <div class="menu-card" data-type="crack">
+      <div class="menu-icon"><i class="fas fa-unlock-alt"></i></div>
+      <h3>Crack Generator</h3>
+      <div class="menu-desc">Keygen simulasi / license bypass demo</div>
+    </div>
+    <div class="menu-card" data-type="backdoor">
+      <div class="menu-icon"><i class="fas fa-dragon"></i></div>
+      <h3>Backdoor Sim</h3>
+      <div class="menu-desc">Ethical backdoor pattern (audit only)</div>
+    </div>
+    <div class="menu-card" data-type="ransom">
+      <div class="menu-icon"><i class="fas fa-lock"></i></div>
+      <h3>Ransom Note Sim</h3>
+      <div class="menu-desc">Simulasi pesan ransomware (tidak berbahaya)</div>
+    </div>
+    <div class="menu-card" data-type="sv_scanner">
+      <div class="menu-icon"><i class="fas fa-search"></i></div>
+      <h3>SV Scanner</h3>
+      <div class="menu-desc">Scan vulnerability / SQLi / XSS pattern</div>
+    </div>
+    <div class="menu-card" data-type="webshell">
+      <div class="menu-icon"><i class="fas fa-terminal"></i></div>
+      <h3>Web Shell Emul</h3>
+      <div class="menu-desc">Admin panel test (simulasi edukasi)</div>
+    </div>
+    <div class="menu-card" data-type="sql_inject">
+      <div class="menu-icon"><i class="fas fa-database"></i></div>
+      <h3>SQLi Playground</h3>
+      <div class="menu-desc">Injection demo untuk belajar SV</div>
+    </div>
+    <div class="menu-card" data-type="deface">
+      <div class="menu-icon"><i class="fas fa-palette"></i></div>
+      <h3>Deface Preview</h3>
+      <div class="menu-desc">Ubah tampilan demo (awareness)</div>
+    </div>
+    <div class="menu-card" data-type="keylogger">
+      <div class="menu-icon"><i class="fas fa-keyboard"></i></div>
+      <h3>Key Simulator</h3>
+      <div class="menu-desc">Keystroke logging edukasi (lokal)</div>
+    </div>
+    <div class="menu-card" data-type="bypass">
+      <div class="menu-icon"><i class="fas fa-shield-hawk"></i></div>
+      <h3>Bypass WAF sample</h3>
+      <div class="menu-desc">Teknik filtering / encoding demo</div>
+    </div>
+    <div class="menu-card" data-type="zeroday">
+      <div class="menu-icon"><i class="fas fa-bug"></i></div>
+      <h3>0-day Concept</h3>
+      <div class="menu-desc">Research template SV</div>
+    </div>
+    <div class="menu-card" data-type="phish">
+      <div class="menu-icon"><i class="fas fa-fish"></i></div>
+      <h3>Phish Page Builder</h3>
+      <div class="menu-desc">Security awareness demo (halaman palsu edukasi)</div>
+    </div>
+  </div>
+
+  <!-- AI GIP STORE (hanya TANYA JAWAB) -->
+  <div class="ai-chatbot">
+    <div class="ai-header">
+      <i class="fas fa-robot"></i>
+      <h2 style="font-size: 1.5rem;">🤖 AI GIP STORE</h2>
+      <span style="background:#0f212e; padding:0.2rem 0.8rem; border-radius:50px;">Tanya Saja</span>
+    </div>
+    <div class="chat-display" id="aiChatDisplay">
+      <i class="fas fa-comment-dots"></i> Halo! Saya AI GIP Store. Tanyakan apapun tentang security, coding, SV (security vulnerability), atau cara penggunaan menu. Saya hanya menjawab pertanyaan.
+    </div>
+    <div class="ai-ask-group">
+      <input type="text" id="aiQuestion" placeholder="Contoh: Apa itu SV? Bagaimana cara kerja backdoor? Jelaskan SQL injection...">
+      <button id="askAiBtn"><i class="fas fa-paper-plane"></i> Tanya AI</button>
+    </div>
+  </div>
+
+  <!-- OUTPUT PANEL + ZIP & KIRIM KE WA -->
+  <div class="output-panel">
+    <div class="output-header">
+      <span><i class="fas fa-code"></i> <strong>Hasil Generate File</strong> (klik menu di atas)</span>
+      <div class="btn-group">
+        <button id="clearOutputBtn" style="background:#334155;"><i class="fas fa-trash"></i> Bersihkan</button>
+      </div>
+    </div>
+    <div id="fileOutput" class="code-area">
+      ⚡ Belum ada file. Klik salah satu menu untuk membuat file (ilegal/tidak ilegal/sv method)
+    </div>
+
+    <!-- Area Kirim ke WhatsApp & Buat ZIP -->
+    <div class="send-wa-box">
+      <div><i class="fab fa-whatsapp"></i> <strong>Kirim hasil file ke Developer (62895326378456)</strong></div>
+      <textarea id="customMessage" rows="2" placeholder="Atau tulis pesan / kode custom disini..."></textarea>
+      <div class="btn-group">
+        <button id="sendToWABtn" class="btn-wa"><i class="fab fa-whatsapp"></i> Kirim ke WhatsApp</button>
+        <button id="downloadZipBtn" class="btn-zip"><i class="fas fa-file-archive"></i> Download sebagai ZIP</button>
+      </div>
+      <div class="note"><i class="fas fa-info-circle"></i> ZIP akan berisi file hasil generate + pesan tambahan. Bisa juga kirim langsung ke nomor developer.</div>
+    </div>
+  </div>
+  <hr>
+  <footer>
+    <i class="fas fa-exclamation-triangle"></i> GIP STORE – SEMUA FILE BERSIFAT EDUKASI & SIMULASI KEAMANAN. Jangan gunakan untuk aktivitas ilegal. SV = Security Vulnerability.
+  </footer>
+</div>
+
+<script>
+  // ======================= DATA GENERATOR =======================
+  let currentFileContent = "# Belum ada konten\nKlik menu untuk generate file";
+  let currentFileName = "gip_output.txt";
+
+  function generateFileByType(type) {
+    let content = "";
+    let filename = "";
+    switch(type) {
+      case 'exploit':
+        content = `# Exploit POC - Ethical Research Only\nimport socket\n\ndef reverse_shell_sim():\n    print("[SIMULASI] Reverse shell pattern untuk edukasi")\n    return "Payload: 127.0.0.1:4444 demo"\n\nif __name__ == "__main__":\n    reverse_shell_sim()`;
+        filename = "exploit_poc.py";
+        break;
+      case 'crack':
+        content = `// Keygen / Crack Simulator (C++ style)\n#include <iostream>\nusing namespace std;\nint main() {\n    cout << "GIP-STORE-LICENSE-KEY-2025";\n    return 0;\n}`;
+        filename = "keygen_sim.cpp";
+        break;
+      case 'backdoor':
+        content = `# Backdoor Simulation (ethical analysis)\ndef backdoor_hook():\n    return "Ethical backdoor concept - audit only - tidak berbahaya"\nprint(backdoor_hook())`;
+        filename = "backdoor_edu.py";
+        break;
+      case 'ransom':
+        content = `# Ransom Note Simulator (NO ENCRYPTION)\nprint("="*50)\nprint("DEMO RANSOMWARE - FILE ANDA AMAN")\nprint("Ini hanya simulasi untuk pembelajaran keamanan")\nprint("="*50)`;
+        filename = "ransom_sim.txt";
+        break;
+      case 'sv_scanner':
+        content = `// SV Scanner - Cek celah keamanan\nfunction scanVulnerability(code) {\n    const svPatterns = [/eval\\(/gi, /document\\.write\\(.*?(user|pass)/gi, /\\$\\_GET/gi];\n    let found = [];\n    svPatterns.forEach(p => { if(p.test(code)) found.push(p); });\n    return found.length ? "Potensi SV: " + found.length : "Aman dari pola dasar";\n}\nconsole.log(scanVulnerability("example"));`;
+        filename = "sv_scanner.js";
+        break;
+      case 'webshell':
+        content = `<?php\n// Web Shell Simulasi (EDUKASI)\necho "<h2>GIP STORE SHELL DEMO</h2>";\nphpinfo();\n// Tidak ada fungsi berbahaya, hanya demo\n?>`;
+        filename = "webshell_sim.php";
+        break;
+      case 'sql_inject':
+        content = `-- SQL Injection Simulation (sandbox pembelajaran)\nSELECT * FROM users WHERE username = 'admin' OR '1'='1' -- \n-- Cara SV: Input tidak disanitasi menyebabkan SQLi`;
+        filename = "injection_demo.sql";
+        break;
+      case 'deface':
+        content = `<html><head><style>body{background:black;color:lime;font-family:monospace}</style></head><body><h1>DEFACE SIMULATION - GIP STORE</h1><p>Halaman ini untuk awareness deface</p></body></html>`;
+        filename = "deface_demo.html";
+        break;
+      case 'keylogger':
+        content = `// Key Simulator Edukasi (hanya logging lokal)\ndocument.addEventListener('keypress', (e) => {\n    console.log("[KEY SIM]", e.key);\n});\n// Tidak mengirim data, hanya untuk pembelajaran keamanan.`;
+        filename = "key_sim.js";
+        break;
+      case 'bypass':
+        content = `# Bypass WAF Simulation (teknik encoding)\npayload = "<scrIpt>alert(1)</scRipt>"\nprint("Teknik bypass: case manipulation + double encoding demo")`;
+        filename = "waf_bypass.txt";
+        break;
+      case 'zeroday':
+        content = `# Zero-day Concept Template\n# Vulnerability: Heap overflow simulation CVE-2025-XXXX\n# Impact: Remote code execution (simulasi penelitian)\n[INFO] Hanya untuk riset keamanan.`;
+        filename = "0day_concept.txt";
+        break;
+      case 'phish':
+        content = `<!-- PHISHING AWARENESS PAGE -->\n<html><body><h2>⚠️ SIMULASI PENTING</h2><p>Jangan masukkan data asli. Halaman ini edukasi anti-phishing.</p>\n<input placeholder="username demo" /></body></html>`;
+        filename = "phish_demo.html";
+        break;
+      default:
+        content = "File default GIP STORE - pilih menu valid";
+        filename = "default.txt";
+    }
+    return { content, filename };
+  }
+
+  // update tampilan output
+  function updateOutput(content, filename) {
+    currentFileContent = content;
+    currentFileName = filename;
+    const outputDiv = document.getElementById('fileOutput');
+    outputDiv.innerHTML = `<i class="fas fa-file"></i> <strong>${escapeHtml(filename)}</strong><br><pre style="margin-top:8px; font-family:monospace;">${escapeHtml(content)}</pre>`;
+    // juga isi textarea custom message dengan isi file (opsional)
+    document.getElementById('customMessage').value = content;
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, function(m) {
+      if(m === '&') return '&amp;';
+      if(m === '<') return '&lt;';
+      if(m === '>') return '&gt;';
+      return m;
+    });
+  }
+
+  // event menu klik
+  document.querySelectorAll('.menu-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const type = card.getAttribute('data-type');
+      const { content, filename } = generateFileByType(type);
+      updateOutput(content, filename);
+      // juga tambah respon ke AI display (optional friendly)
+      const aiDiv = document.getElementById('aiChatDisplay');
+      aiDiv.innerHTML = `<i class="fas fa-brain"></i> 🤖 AI: Menu "${card.querySelector('h3')?.innerText}" telah dipilih. File ${filename} siap. Kamu bisa download ZIP atau kirim ke developer.`;
+    });
+  });
+
+  // AI Tanya Jawab (hanya merespon pertanyaan)
+  document.getElementById('askAiBtn').addEventListener('click', () => {
+    const question = document.getElementById('aiQuestion').value.trim();
+    if (!question) {
+      document.getElementById('aiChatDisplay').innerHTML = `<i class="fas fa-comment-dots"></i> AI: Silakan tanyakan sesuatu tentang SV, file ilegal/legal, cara kerja backdoor, dll.`;
+      return;
+    }
+    let answer = "";
+    const q = question.toLowerCase();
+    if (q.includes("sv") || q.includes("vulnerability") || q.includes("celah")) {
+      answer = "SV (Security Vulnerability) adalah celah keamanan seperti SQLi, XSS, buffer overflow. Di GIP Store, menu 'SV Scanner' bisa mendeteksi pola dasar. Selalu gunakan untuk edukasi.";
+    } else if (q.includes("backdoor")) {
+      answer = "Backdoor adalah akses tersembunyi ke sistem. Menu Backdoor Sim di sini hanya simulasi pattern untuk audit keamanan, tidak membahayakan.";
+    } else if (q.includes("ilegal") || q.includes("legal")) {
+      answer = "Menu ilegal/tidak ilegal di GIP Store hanya simulasi kode untuk pembelajaran keamanan & penelitian etis. Jangan gunakan di sistem orang lain tanpa izin.";
+    } else if (q.includes("zip")) {
+      answer = "Kamu bisa klik tombol 'Download sebagai ZIP' untuk mengunduh file hasil generate plus catatan. ZIP berisi file yang sedang aktif.";
+    } else if (q.includes("crack") || q.includes("keygen")) {
+      answer = "Crack/Keygen generator hanya untuk memahami cara kerja lisensi, digunakan untuk riset reverse engineering secara etis.";
+    } else {
+      answer = `Terima kasih atas pertanyaanmu. GIP Store menyediakan berbagai file builder (simulasi). Coba klik menu untuk generate file dan pelajari cara kerja SV. Untuk detail "${question}", selalu gunakan secara bertanggung jawab.`;
+    }
+    document.getElementById('aiChatDisplay').innerHTML = `<i class="fas fa-robot"></i> 🤖 AI: ${escapeHtml(answer)}`;
+    document.getElementById('aiQuestion').value = '';
+  });
+
+  // Kirim ke WhatsApp (nomor developer)
+  document.getElementById('sendToWABtn').addEventListener('click', () => {
+    let customMsg = document.getElementById('customMessage').value;
+    if (!customMsg.trim()) {
+      customMsg = currentFileContent;
+    }
+    const devNumber = "62895326378456";
+    const fullMessage = `GIP STORE - Hasil Generate:%0A%0AFile: ${currentFileName}%0A%0A${encodeURIComponent(customMsg)}%0A%0A-- dikirim dari GIP STORE Web Builder`;
+    const waUrl = `https://wa.me/${devNumber}?text=${fullMessage}`;
+    window.open(waUrl, '_blank');
+  });
+
+  // Download ZIP menggunakan JSZip
+  document.getElementById('downloadZipBtn').addEventListener('click', async () => {
+    const zip = new JSZip();
+    // tambahkan file utama hasil generate
+    zip.file(currentFileName, currentFileContent);
+    // tambahkan file README
+    const readme = `GIP STORE ARCHIVE\nFile ini dihasilkan dari GIP Store.\nNama File: ${currentFileName}\nWaktu: ${new Date().toLocaleString()}\nGunakan untuk edukasi keamanan.`;
+    zip.file("README_GIPSTORE.txt", readme);
+    // tambahkan pesan custom (jika ada)
+    const customText = document.getElementById('customMessage').value;
+    if (customText.trim() && customText !== currentFileContent) {
+      zip.file("custom_note.txt", customText);
+    }
+    // generate zip dan download
+    const blob = await zip.generateAsync({ type: "blob" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.href = url;
+    link.download = `GIPSTORE_${currentFileName.replace(/[^a-z0-9]/gi, '_')}.zip`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    // respon AI
+    document.getElementById('aiChatDisplay').innerHTML = `<i class="fas fa-archive"></i> ✅ ZIP berhasil dibuat! Berisi file ${currentFileName} + README.`;
+  });
+
+  // tombol clear output
+  document.getElementById('clearOutputBtn').addEventListener('click', () => {
+    currentFileContent = "# Kosong\nKlik menu untuk generate ulang";
+    currentFileName = "empty.txt";
+    document.getElementById('fileOutput').innerHTML = `⚡ Output dibersihkan. Klik menu untuk generate file baru.`;
+    document.getElementById('customMessage').value = '';
+    document.getElementById('aiChatDisplay').innerHTML = `<i class="fas fa-comment-dots"></i> Output direset. Silakan pilih menu atau tanya AI.`;
+  });
+
+  // set initial default
+  const defaultGen = generateFileByType('exploit');
+  updateOutput(defaultGen.content, defaultGen.filename);
+</script>
+</body>
+</html>
